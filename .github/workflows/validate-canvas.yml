@@ -1,30 +1,74 @@
-name: Validate canvas.json
+name: Validate and Auto-Merge
 
 on:
   push:
     branches: [ main ]
-  pull_request:
+  pull_request_target:
     branches: [ main ]
 
 jobs:
-  validate:
+  validate-and-merge:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       pull-requests: write
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js
+      - name: Checkout Code (Push)
+        if: github.event_name == 'push'
+        uses: actions/checkout@v3
+
+      - name: Checkout Main Branch (PR Base)
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - name: Fetch PR Branch
+        if: github.event_name == 'pull_request_target'
+        run: |
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+
+      - name: Security Check (PR Files Filter)
+        if: github.event_name == 'pull_request_target'
+        run: |
+          CHANGED_FILES=$(git diff --name-only main pr-branch)
+          for file in $CHANGED_FILES; do
+            if [[ ! "$file" =~ ^canvas\.json$ && ! "$file" =~ ^Song/ && ! "$file" =~ ^Album/ ]]; then
+              echo "Security Error: PR modifies protected system files ($file). Manual review is required."
+              exit 1
+            fi
+          done
+
+      - name: Checkout PR Branch
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v3
+        with:
+          ref: pr-branch
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+
       - name: Run Validation Script
         id: run-validation
         run: node scripts/validate_canvas.js
-        continue-on-error: true # Allow comment step to run even if script fails
+        continue-on-error: true
+
       - name: Post PR Comment
+        if: github.event_name == 'pull_request_target'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           path: validation_report.md
+
       - name: Fail if validation failed
         if: steps.run-validation.outcome == 'failure'
         run: exit 1
+
+      - name: Auto-Merge Pull Request
+        if: github.event_name == 'pull_request_target' && steps.run-validation.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto

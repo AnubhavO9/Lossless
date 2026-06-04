@@ -1,14 +1,18 @@
 # Echo Music Canvas
 
-Implementing a new way to get beautiful custom canvas background videos for the **Echo Music** app!
+<p align="center">
+  <img src="App Logo/echo.png" alt="Echo Music Logo" width="120" height="120" style="border-radius: 24px;" />
+</p>
 
-This repository acts as the central hub for mapping custom `.m3u8` or `.mp4` background visualizers to specific songs or albums within the Echo Music client. Because it is optimized for Vercel/GitHub Pages, any changes you push to this repository are instantly deployed and served via a global CDN.
+Implementing a new way to get beautiful custom canvas background videos for the **Echo Music** app.
+
+This repository acts as the central hub for mapping custom `.m3u8` or `.mp4` background visualizers to specific songs or albums within the Echo Music client.
 
 ---
 
 ## How to Add a New Canvas
 
-If you find a cool vertical visualizer or music video clip and want it to display as a dynamic canvas background in Echo Music whenever a specific song plays, follow these steps:
+If you find a custom vertical visualizer or music video clip and want it to display as a dynamic canvas background in Echo Music whenever a specific song plays, follow these steps:
 
 ### 1. Upload your Video File
 Add your video file into either the `Song/` or `Album/` directories within this repository.
@@ -16,9 +20,7 @@ Add your video file into either the `Song/` or `Album/` directories within this 
 * **Example:** `Song/dracula_visualizer.mp4`
 
 ### 2. Update `canvas.json`
-Open the `canvas.json` file located in the root of the repository. Add a new item block mapping the exact song name and artist to your new video URL.
-
-Make sure your URL points to your deployed Vercel domain!
+Open the `canvas.json` file located in the root of the repository. Add a new item block mapping the exact song name and artist to your new video URL pointing to your deployed domain.
 
 **Example entry:**
 ```json
@@ -27,24 +29,17 @@ Make sure your URL points to your deployed Vercel domain!
     {
       "song": "Song Title",
       "artist": "Artist Name",
-      "url": "https://echomusicanvas.vercel.app/Song/your_video.mp4"
+      "url": "https://echo-music-canvas.pages.dev/Song/your_video.mp4"
     }
   ]
 }
 ```
 
 ### 3. Commit and Push
-Once you have uploaded your video and updated `canvas.json`, commit your changes and push them to your repository fork or submit a Pull Request.
+Once you have uploaded your video and updated `canvas.json`, commit your changes, push them to your repository fork, and submit a Pull Request.
 
 > [!IMPORTANT]
 > When opening a **Pull Request**, please include the **original song/album link** (YouTube Music, Spotify, or similar) in the description. This helps verify metadata and ensure the canvas matches the correct track.
-
-**Pull Request Example:**
-> **Title:** `feat: added canvas for Blinding Lights by The Weeknd`
-> **Description:**
-> - Added `Song/blinding_lights.mp4`
-> - Updated `canvas.json` mapping for "Blinding Lights"
-> - **Original Link:** https://music.youtube.com/watch?v=4NRXx6U8ABQ
 
 ```bash
 git add .
@@ -52,24 +47,66 @@ git commit -m "feat: added canvas for Song Title"
 git push origin main
 ```
 
-Your changes will be verified and deployed. Once active, enable **"Enable Canvas"** under **Settings -> Playback Settings** in the Echo Music app, play the song, and watch the visualizer loop!
+Once your PR is accepted and merged, it will deploy automatically to Cloudflare Pages.
 
 ---
 
-## Continuous Integration
+## Technical Requirements and Guidelines
 
-To ensure the integrity of `canvas.json` and prevent broken links, we run an automated **Validation Bot** on every Pull Request:
+To ensure the integrity of `canvas.json` and prevent layout or loading issues, make sure your visualizer files meet the following guidelines:
 
-1. **JSON Syntax**: Ensures the file is correctly formatted JSON.
-2. **Schema Check**: Verifies that `song`, `artist`, and `url` fields are present for every entry.
-3. **Local File Check**: Verifies that the video file referenced in the URL actually exists in the local `Song/` or `Album/` directories.
-4. **No Duplicates**: Ensures that no two entries have the same (song, artist) combination.
-5. **Format Check**: Ensures URLs end in `.mp4` or `.m3u8`.
+* **Aspect Ratio:** `9:16` (Vertical Canvas is required for mobile playback).
+* **Format:** `.mp4` or `.m3u8` files.
+* **File Size:** Max **25MB** for Cloudflare Pages builds (recommended: **< 5MB** for faster buffering and low data usage).
+* **Looping:** 5–20 seconds duration with a clean loop transition.
+
+---
+
+## Continuous Integration (CI) and Automated Merging
+
+We run an automated validation and auto-merge workflow on every Pull Request. If a Pull Request meets all the required checks and security conditions, the repository will automatically approve and merge the PR into the `main` branch.
+
+### Automated Merge Conditions
+
+For a Pull Request to be merged automatically, it must pass the following checks:
+
+1. **Security Filters (File Constraints):**
+   * The Pull Request must **only** modify `canvas.json` and files within the `Song/` or `Album/` directories.
+   * Any modifications to scripts, GitHub Action workflows, web pages, or stylesheets will disable auto-merge and require manual developer review.
+
+2. **Strict Sequential Naming (Series-Wise):**
+   * Newly added canvas files must follow the numerical series format (e.g. `32.mp4` or `32.m3u8`).
+   * New filenames must be strictly consecutive, continuing from the highest existing committed number (no gaps, skips, or random naming schemes allowed).
+   * Grandfathered legacy files (e.g. non-numerical names) are exempt, but no new ones can be added.
+
+3. **Maximum File Size Limit:**
+   * All newly added files in a Pull Request must be **equal to or less than 5 MB** to ensure fast loading and prevent build issues on Cloudflare Pages.
+
+4. **Formatting and Integrity:**
+   * **JSON Syntax:** The `canvas.json` database must be correctly formatted JSON.
+   * **Schema Integrity:** The `song`, `artist`, and `url` fields must be present and match the local directory structure.
+   * **No Duplicates:** No two entries in `canvas.json` can map to the exact same song and artist combination.
 
 You can run this validation locally prior to committing:
 ```bash
 node scripts/validate_canvas.js
 ```
+
+---
+
+## Community and Support
+
+Need help or want to join the Echo Music community?
+
+* **Discord Community:** [Join our Discord](https://discord.com/invite/EcfV3AxH5c)
+* **Telegram Channel:** [Join our Telegram](https://t.me/EchoMusicApp)
+* **Issues:** If you encounter any bugs, please [open a GitHub Issue](https://github.com/EchoMusicApp/Echo-Music-Canvas/issues).
+
+---
+
+## Credits and Fork Origin
+
+* **Fork Origin:** This project is a fork of [vivimusicanvas](https://github.com/vivizzz007/vivimusicanvas) developed by [vivizzz007](https://github.com/vivizzz007).
 
 ---
 
